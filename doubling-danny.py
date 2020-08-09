@@ -1,10 +1,4 @@
-import random
-
-import flutes
-
-
-def solution_truth(a, m):
-    return sum(pow(2, x % (m - 1), m) for x in a) % m
+profile = lambda x: x
 
 
 def fastmul(a: int, b: int, m: int) -> int:
@@ -19,20 +13,15 @@ def fastmul(a: int, b: int, m: int) -> int:
     return r
 
 
-# @profile
-def _solution(a, mod, n_iters=5, prev_sum_log=None):
+@profile
+def _solution(a, mod, n_iters=3):
     orders = sorted((x, i) for i, x in enumerate(a))
     powers = [0] + [x for x, _ in orders]
     powers = [b - a for a, b in zip(powers, powers[1:])]
-    binaries = [bin(x)[2:] for x in powers]
-    sum_log = sum(len(x) for x in binaries)
 
     ans = [None] * len(a)
-    if prev_sum_log is not None and prev_sum_log <= sum_log + len(a): return None
-    res = None
     if n_iters > 0:
-        res = _solution(powers, mod, n_iters - 1, sum_log)
-    if res is None:
+        binaries = [bin(x)[2:] for x in powers]
         pow2 = [2]
         max_log = max(len(x) for x in binaries)
         for _ in range(max_log):
@@ -49,6 +38,7 @@ def _solution(a, mod, n_iters=5, prev_sum_log=None):
             if x >= mod: x %= mod
             ans[orders[idx][1]] = prev = x
     else:
+        res = _solution(powers, mod, n_iters - 1)
         x = 1
         for idx, v in enumerate(res):
             x *= v
@@ -66,6 +56,7 @@ def solution(a, m):
     return ret
 
 
+@profile
 def solution_(a, m):
     powers = [0] + sorted(x % (m - 1) for x in a)
     powers = [b - a for a, b in zip(powers, powers[1:])]
@@ -93,17 +84,26 @@ def solution_(a, m):
     return ans
 
 
+def solution_truth(a, m):
+    return sum(pow(2, x % (m - 1), m) for x in a) % m
+
+
+import random
+import flutes
+import pickle
+
+
 def main():
-    random.seed(19260817)
-    # with open("/Users/kanari/Downloads/sl_doubling_danny.pkl", "rb") as f:
-    #     data = pickle.load(f)
+    random.seed(flutes.__MAGIC__)
+    with open("data/sl_doubling_danny.pkl", "rb") as f:
+        data = pickle.load(f)
     # print(data)
     # print(solution(*data))
-    with flutes.work_in_progress():
-        m = 2 ** 2203 - 1
-        x = 2 ** 2203
-        # a = [m - random.randint(0, 10000) for _ in range(1000)]
-        a = [random.randint(0, x) for _ in range(500)]
+
+    m = 2 ** 2203 - 1
+    # a = [m - random.randint(0, 10000) for _ in range(1000)]
+    a = [random.randint(0, m - 1) for _ in range(500)]
+
     with flutes.work_in_progress():
         print(solution(a, m))
     with flutes.work_in_progress():
