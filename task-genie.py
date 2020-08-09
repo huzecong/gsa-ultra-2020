@@ -1,8 +1,19 @@
-from collections import defaultdict
 from typing import List, Tuple
 
 
-def solution(tasks: List[Tuple[int, int]], wishes: int) -> int:
+def solution_brute(tasks: List[Tuple[int, int]], wishes: int) -> int:
+    n = len(tasks)
+    children = [[] for _ in range(n)]
+    for idx, (p, _) in enumerate(tasks):
+        if p != -1: children[p].append(idx)
+
+    def dfs(x: int) -> None:
+        pass
+
+    dfs(0)
+
+
+def solution_wrong(tasks: List[Tuple[int, int]], wishes: int) -> int:
     n = len(tasks)
     children = [[] for _ in range(n)]
     parent = [p for p, _ in tasks]
@@ -41,14 +52,13 @@ def solution(tasks: List[Tuple[int, int]], wishes: int) -> int:
 
 import pickle
 import flutes
-import random
 
 
 def main():
     with open("data/sl_task_genie.pkl", "rb") as f:
         tasks, wishes = pickle.load(f)
     with flutes.work_in_progress():
-        print(solution(tasks, wishes))
+        print(solution_wrong(tasks, wishes))
 
 
 if __name__ == '__main__':

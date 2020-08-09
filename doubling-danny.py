@@ -56,6 +56,39 @@ def solution(a, m):
     return ret
 
 
+def solution_10(a, m):
+    powers = [0] + sorted(x % (m - 1) for x in a)
+    powers = [b - a for a, b in zip(powers, powers[1:])]
+
+    digits = [str(x) for x in powers]
+    max_digits = max(len(x) for x in digits)
+    pow10 = [[2 ** k for k in range(1, 10)]]
+    for _ in range(max_digits):
+        x = pow10[-1][0]
+        val = x ** 10
+        if val >= m: val %= m
+        vals = [val]
+        for _ in range(8):
+            y = vals[-1] * val
+            if y >= m: y %= m
+            vals.append(y)
+        pow10.append(vals)
+    prev = 1
+    ans = 0
+    for b in digits:
+        x = 1
+        for i, vs in zip(reversed(b), pow10):
+            if i == '0': continue
+            x *= vs[ord(i) - 49]
+            if x >= m: x %= m
+        x *= prev
+        if x >= m: x %= m
+        prev = x
+        ans += x
+        if ans >= m: ans -= m
+    return ans
+
+
 @profile
 def solution_(a, m):
     powers = [0] + sorted(x % (m - 1) for x in a)
@@ -104,6 +137,8 @@ def main():
     # a = [m - random.randint(0, 10000) for _ in range(1000)]
     a = [random.randint(0, m - 1) for _ in range(500)]
 
+    with flutes.work_in_progress():
+        print(solution_10(a, m))
     with flutes.work_in_progress():
         print(solution(a, m))
     with flutes.work_in_progress():

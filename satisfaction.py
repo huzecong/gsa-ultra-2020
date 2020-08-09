@@ -1,6 +1,6 @@
 import itertools
 from dataclasses import dataclass, field
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, Optional
 
 
 def tokenize(s: str) -> List[str]:
@@ -29,7 +29,12 @@ class And(Node):
     children: Tuple[Node, ...]
 
     def __bool__(self):
-        return all(self.children)
+        ret = True
+        for child in self.children:
+            val = bool(child)
+            if val is False: return val
+            if val is None: ret = None
+        return ret
 
     def __str__(self):
         return "(" + " and ".join(map(str, self.children)) + ")"
@@ -40,7 +45,12 @@ class Or(Node):
     children: Tuple[Node, ...]
 
     def __bool__(self):
-        return any(self.children)
+        ret = False
+        for child in self.children:
+            val = bool(child)
+            if val is True: return val
+            if val is None: ret = None
+        return ret
 
     def __str__(self):
         return "(" + " or ".join(map(str, self.children)) + ")"
@@ -51,7 +61,9 @@ class Not(Node):
     child: Node
 
     def __bool__(self):
-        return not bool(self.child)
+        val = bool(self.child)
+        if val is None: return None
+        return not val
 
     def __str__(self):
         return f"not {self.child}"
@@ -60,7 +72,7 @@ class Not(Node):
 @dataclass(unsafe_hash=True)
 class Var(Node):
     idx: int
-    var_list: List[bool] = field(repr=False, hash=False, default=None)
+    var_list: List[Optional[bool]] = field(repr=False, hash=False, default=None)
 
     def __bool__(self):
         return self.var_list[self.idx]
@@ -195,28 +207,18 @@ def solution(n: int, prop: str) -> int:
     print(tree)
     variables = set()
 
-    def dfs(node: Node):
+    def collect_vars(node: Node):
         if isinstance(node, Var):
             variables.add(node.idx)
         elif isinstance(node, Not):
-            dfs(node.child)
+            collect_vars(node.child)
         else:
             for x in node.children:
-                dfs(x)
+                collect_vars(x)
 
-    ans = 0
-    # print(str(tree))
-    ast = compile(str(tree), "", "eval")
-    dfs(tree)
+    collect_vars(tree)
     variables = list(variables)
-    var_names = [chr(65 + i) for i in variables]
-    for vals in itertools.product(*([[False, True]] * len(variables))):
-        # for idx, val in zip(variables, vals):
-        #     var_list[idx] = val
-        # assert eval(ast, dict(zip(var_names, vals))) == bool(tree)
-        # if bool(tree): ans += 1
-        ans += eval(ast, dict(zip(var_names, vals)))
-    ans *= pow(2, n - len(variables))
+
     return ans
 
 
