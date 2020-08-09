@@ -1,3 +1,5 @@
+import base64
+import pickle
 from collections import defaultdict
 from typing import Dict, List, Tuple
 
@@ -45,7 +47,7 @@ def solution(n: int, snakes: List[Tuple[int, int]], ladders: List[Tuple[int, int
     max_diff = max(b - a for a, b in zip(key_indices, key_indices[1:]))
     indices = set()
     for i in key_indices:
-        for j in range(max(0, i - 5), min(n - 1, i + 6)):
+        for j in range(max(0, i), min(n - 1, i + 6)):
             indices.add(j)
     indices = sorted(indices, reverse=True)
 
@@ -64,7 +66,7 @@ def solution(n: int, snakes: List[Tuple[int, int]], ladders: List[Tuple[int, int
     for i in indices:
         coefs[i] = cur_coef = defaultdict(float)
         trans = trans_coefs[last_key - i]
-        cur_coef[m] += trans_coefs[last_key - i][0]
+        cur_coef[m] += trans[0]
         for j in range(6):
             if last_key + j < n - 1:
                 x = move[last_key + j]
@@ -118,8 +120,8 @@ def solution_unoptimized(n: int, snakes: List[Tuple[int, int]], ladders: List[Tu
     for i in range(len(snakes)):
         mat[i][i] -= 1.0
         mat[i][-1] = -mat[i][-1]
-    print([row[0] for row in mat])
-    print([row[-1] for row in mat])
+    # print([row[0] for row in mat])
+    # print([row[-1] for row in mat])
     sol = gaussian_elimination(mat)
     ans = coef[0][-1]
     for i in range(len(snakes)):
@@ -198,7 +200,7 @@ def main():
     with open("data/sl_snakes_and_ladders.pkl", "rb") as f:
         n, snakes, ladders = pickle.load(f)
 
-    n, snakes, ladders = gen_data(100000, 100, 100)
+    n, snakes, ladders = gen_data(10000, 100, 100)
     with flutes.work_in_progress():
         print(solution(n, snakes, ladders))
     with flutes.work_in_progress():
