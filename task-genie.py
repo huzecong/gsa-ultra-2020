@@ -1,16 +1,43 @@
 from typing import List, Tuple
 
+INF = 10 ** 9
+
 
 def solution_brute(tasks: List[Tuple[int, int]], wishes: int) -> int:
     n = len(tasks)
     children = [[] for _ in range(n)]
+    cost = [c for _, c in tasks]
     for idx, (p, _) in enumerate(tasks):
         if p != -1: children[p].append(idx)
+    size = [1] * n
+    max_depth = [0] * n
 
     def dfs(x: int) -> None:
-        pass
+        for child in children[x]:
+            dfs(child)
+            size[x] += size[child]
+            max_depth[x] = max(max_depth[x], max_depth[child])
+        max_depth[x] += cost[x]
 
     dfs(0)
+
+    def dp(x: int) -> List[int]:
+        if size[x] == 1:
+            return [cost[x], 0]
+        f = dp(children[x][0])
+        for child in children[x][1:]:
+            g = dp(child)
+            next_f = [INF] * min(wishes + 1, len(f) + len(g) - 1)
+            for i, f_val in enumerate(f):
+                for j, g_val in enumerate(g):
+                    if i + j >= len(next_f): break
+                    next_f[i + j] = min(next_f[i + j], max(f_val, g_val))
+            f = next_f
+        return [max_depth[x]] + [min(f[i], f[i + 1] + cost[x]) for i in range(len(f) - 1)]
+
+    f = dp(0)
+    ans = f[wishes]
+    return ans
 
 
 def solution_wrong(tasks: List[Tuple[int, int]], wishes: int) -> int:
@@ -57,6 +84,8 @@ import flutes
 def main():
     with open("data/sl_task_genie.pkl", "rb") as f:
         tasks, wishes = pickle.load(f)
+    with flutes.work_in_progress():
+        print(solution_brute(tasks, wishes))
     with flutes.work_in_progress():
         print(solution_wrong(tasks, wishes))
 
