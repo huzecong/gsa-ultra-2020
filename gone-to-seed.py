@@ -82,6 +82,39 @@ def solution(_skills: Dict[str, int]) -> str:
             state = sum(1 << x for x in state_players)
             candidates = [0] if state & 1 else state_players
             for winner in candidates:
+                prob = 0
+                for other_winner in state_players:
+                    if winner == other_winner: continue
+                    players = [x for x in state_players if x != winner and x != other_winner]
+                    cur_prob = 0
+                    for other_half in itertools.combinations(players, (n_players >> 1) - 1):
+                        other_state = sum(1 << x for x in other_half) | (1 << other_winner)
+                        cur_state = state - other_state
+                        cur_prob += dp_vals[other_winner << n | other_state] * dp_vals[winner << n | cur_state]
+                    prob += cur_prob * win_prob[winner][other_winner]
+                prob /= cnt
+                dp_vals[winner << n | state] = prob.simplify()
+
+    ans = dp_vals[(1 << n) - 1].simplify()
+    return str(ans.numerator) + str(ans.denominator)
+
+
+def solution_old(_skills: Dict[str, int]) -> str:
+    skills = [_skills["Andy"]] + [v for k, v in _skills.items() if k != "Andy"]
+    win_prob = [[Frac(a, a + b).simplify() for b in skills] for a in skills]
+    n = len(skills)
+
+    dp_vals = [0] * (n << n)
+    for a in range(n):
+        for b in range(n):
+            if a == b: continue
+            dp_vals[a << n | 1 << a | 1 << b] = win_prob[a][b]
+    for n_players in itertools.takewhile(lambda i: i <= n, (1 << i for i in itertools.count(2))):
+        cnt = math.factorial(n_players - 1) // math.factorial(n_players >> 1) // math.factorial((n_players >> 1) - 1)
+        for state_players in itertools.combinations(range(n), n_players):
+            state = sum(1 << x for x in state_players)
+            candidates = [0] if state & 1 else state_players
+            for winner in candidates:
                 players = [x for x in state_players if x != winner]
                 prob = 0
                 for other_half in itertools.combinations(players, n_players >> 1):
@@ -219,7 +252,7 @@ def main():
     with open("data/sl_gone_to_seed.pkl", "rb") as f:
         skills, = pickle.load(f)
 
-    n = 8
+    n = 16
     values = [random.randint(1, 20) for _ in range(n)]
     names = ['Andy'] + [chr(65 + x) for x in range(1, n)]
     skills = dict(zip(names, values))
@@ -228,6 +261,8 @@ def main():
 
     with flutes.work_in_progress():
         print(solution(skills))
+    with flutes.work_in_progress():
+        print(solution_old(skills))
     with flutes.work_in_progress():
         print(solution_search(skills))
     # with flutes.work_in_progress():

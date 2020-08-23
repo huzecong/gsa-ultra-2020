@@ -21,18 +21,25 @@ def _solution(a, mod, n_iters=3):
 
     ans = [None] * len(a)
     if n_iters > 0:
-        binaries = [bin(x)[2:] for x in powers]
-        pow2 = [2]
-        max_log = max(len(x) for x in binaries)
-        for _ in range(max_log):
-            val = pow2[-1] ** 2 % mod
-            pow2.append(val)
+        digits = [str(x) for x in powers]
+        max_digits = max(len(x) for x in digits)
+        pow10 = [[2 ** k for k in range(1, 10)]]
+        for _ in range(max_digits):
+            x = pow10[-1][0]
+            val = x ** 10
+            if val >= mod: val %= mod
+            vals = [val]
+            for _ in range(8):
+                y = vals[-1] * val
+                if y >= mod: y %= mod
+                vals.append(y)
+            pow10.append(vals)
         prev = 1
-        for idx, b in enumerate(binaries):
+        for idx, b in enumerate(digits):
             x = 1
-            for i in range(len(b)):
-                if b[-(i + 1)] == '0': continue
-                x *= pow2[i]
+            for i, vs in zip(reversed(b), pow10):
+                if i == '0': continue
+                x *= vs[ord(i) - 49]
                 if x >= mod: x %= mod
             x *= prev
             if x >= mod: x %= mod
@@ -90,7 +97,7 @@ def solution_10(a, m):
 
 
 @profile
-def solution_(a, m):
+def solution_2(a, m):
     powers = [0] + sorted(x % (m - 1) for x in a)
     powers = [b - a for a, b in zip(powers, powers[1:])]
 
@@ -142,7 +149,7 @@ def main():
     with flutes.work_in_progress():
         print(solution(a, m))
     with flutes.work_in_progress():
-        print(solution_(a, m))
+        print(solution_2(a, m))
     # with flutes.work_in_progress():
     #     print(solution_truth(a, m))
 

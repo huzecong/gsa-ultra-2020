@@ -3,8 +3,35 @@ from typing import List
 INF = 2000000000
 
 
-# @profile
 def solution(a: List[int], b: List[int]) -> int:
+    n = len(a)
+    m = len(b)
+    a = [0] + a
+    b = [0] + b
+    diff_a = [0] + [abs(y - x) for x, y in zip(a, a[1:])] + [0] * (m + 1)
+    diff_b = [0] + [abs(y - x) for x, y in zip(b, b[1:])] + [0] * (n + 1)
+    f = [INF] * (n + m + 1)
+    g = [INF] * (n + m + 1)
+    f2 = [INF] * (n + m + 1)
+    g2 = [INF] * (n + m + 1)
+    # f[i]/g[i] -> (i, diag - i)
+    f[1], g[0] = a[1], b[1]
+    for diag in range(2, n + m + 1):
+        # if diag <= m:
+        g2[0] = g[0] + diff_b[diag]
+        # if diag <= n:
+        f2[diag] = f[diag - 1] + diff_a[diag]
+        for i in range(max(1, diag - m), min(n, diag - 1) + 1):
+            j = diag - i
+            x = abs(a[i] - b[j])
+            f2[i] = min(f[i - 1] + diff_a[i], g[i - 1] + x)
+            g2[i] = min(f[i] + x, g[i] + diff_b[j])
+        f, f2 = f2, f
+        g, g2 = g2, g
+    return min(f[n], g[n])
+
+
+def solution_reverse(a: List[int], b: List[int]) -> int:
     n = len(a)
     m = len(b)
     a = [0] + a
@@ -21,40 +48,11 @@ def solution(a: List[int], b: List[int]) -> int:
         l, r = max(1, diag - m), min(n, diag - 1)
         for i in range(r, l - 1, -1):
             j = diag - i
-            g[i] = min(f[i] + abs(b[j] - a[i]), g[i] + diff_b[j])
-            f[i] = min(f[i - 1] + diff_a[i], g[i - 1] + abs(a[i] - b[j]))
+            x = abs(b[j] - a[i])
+            g[i] = min(f[i] + x, g[i] + diff_b[j])
+            f[i] = min(f[i - 1] + diff_a[i], g[i - 1] + x)
         # if diag <= m:
         g[0] += diff_b[diag]
-    return min(f[n], g[n])
-
-
-def solution_(a: List[int], b: List[int]) -> int:
-    n = len(a)
-    m = len(b)
-    a = [0] + a
-    b = [0] + b
-    diff_a = [0] + [abs(y - x) for x, y in zip(a, a[1:])] + [0] * (m + 1)
-    diff_b = [0] + [abs(y - x) for x, y in zip(b, b[1:])] + [0] * (n + 1)
-    f = [INF] * (n + m + 1)
-    g = [INF] * (n + m + 1)
-    f2 = [INF] * (n + m + 1)
-    g2 = [INF] * (n + m + 1)
-    # f[i]/g[i] -> (i, diag - i)
-    f[1], g[0] = a[1], b[1]
-    # print()
-    # print(_repr(f), _repr(g))
-    for diag in range(2, n + m + 1):
-        # if diag <= m:
-        g2[0] = g[0] + diff_b[diag]
-        # if diag <= n:
-        f2[diag] = f[diag - 1] + diff_a[diag]
-        for i in range(max(1, diag - m), min(n, diag - 1) + 1):
-            j = diag - i
-            f2[i] = min(f[i - 1] + diff_a[i], g[i - 1] + abs(a[i] - b[j]))
-            g2[i] = min(f[i] + abs(b[j] - a[i]), g[i] + diff_b[j])
-        f, f2 = f2, f
-        g, g2 = g2, g
-        # print(_repr(f), _repr(g), sep='    ')
     return min(f[n], g[n])
 
 
@@ -150,7 +148,7 @@ def main():
     with flutes.work_in_progress():
         print(solution(a, b))
     with flutes.work_in_progress():
-        print(solution_(a, b))
+        print(solution_reverse(a, b))
     with flutes.work_in_progress():
         print(solution_full(a, b))
     with flutes.work_in_progress():
